@@ -44,6 +44,7 @@ func isMultiplePorts(port string) bool {
 
 }
 
+// IsPort 判断是否是网络端口，格式支持 80 1-100 22,23
 func IsPort[T ~int | ~string](port T) bool {
 	_port := fmt.Sprint(port)
 	if isOnePort(_port) || isMultiplePorts(_port) || isPortRange(_port) {
@@ -74,6 +75,7 @@ func generateMultiplePorts(port string) (res []int) {
 	return res
 }
 
+// GeneratePorts 生成端口范围的所有端口
 func GeneratePorts[T ~int | ~string](port T) (res []int) {
 	p := fmt.Sprint(port)
 	if IsPort(p) {
@@ -98,6 +100,7 @@ func GeneratePorts[T ~int | ~string](port T) (res []int) {
 	return res
 }
 
+// IsAllowPort 判断是端口是否在某个端口范围
 func IsAllowPort[T ~int | ~string](allowPorts, port T) bool {
 	_port := fmt.Sprint(port)
 	if !isOnePort(_port) {

@@ -1,5 +1,7 @@
 package xresponse
 
+// 封装 HTTP 框架的返回值
+
 type Framework interface {
 	SetFramework(*Response)
 }

@@ -11,6 +11,7 @@ import (
 	"unicode/utf8"
 )
 
+// EncryptCFB CFB 字符串加密，加密 key 长度必等于32
 func EncryptCFB(plaintext string, key string) (string, error) {
 	plaintextByte := []byte(plaintext)
 	block, err := aes.NewCipher([]byte(key))
@@ -27,6 +28,7 @@ func EncryptCFB(plaintext string, key string) (string, error) {
 	return hex.EncodeToString(ciphertext), nil
 }
 
+// DecryptCFB CFB 字符串解密
 func DecryptCFB(ciphertext string, key string) (string, error) {
 	plaintext, err := hex.DecodeString(ciphertext)
 	if err != nil {
@@ -46,6 +48,7 @@ func DecryptCFB(ciphertext string, key string) (string, error) {
 	return string(plaintext), nil
 }
 
+// DecryptCFBToStruct 将结构体中的加密字段转换为明文
 func DecryptCFBToStruct(x any, secretKey string) error {
 	vPrt := reflect.ValueOf(x)
 	if vPrt.Kind() != reflect.Ptr {

@@ -5,6 +5,7 @@ import (
 	"regexp"
 )
 
+// IsPasswordComplexity 检查密码是否符合复杂度
 func IsPasswordComplexity(s string, minLength int, containsNumber, containsSymbols, containsLowercase, containsUppercase bool) bool {
 	if !regexp.MustCompile(`^[\da-zA-Z!@#$%^&*]*$`).MatchString(s) {
 		return false
@@ -35,6 +36,7 @@ func IsPasswordComplexity(s string, minLength int, containsNumber, containsSymbo
 	return true
 }
 
+// CreatePassword 创建密码
 func CreatePassword(password string) (hashPassword string) {
 	p := []byte(password)
 	h, _ := bcrypt.GenerateFromPassword(p, bcrypt.MinCost)
@@ -42,6 +44,7 @@ func CreatePassword(password string) (hashPassword string) {
 	return hashPassword
 }
 
+// ComparePassword 比较密码
 func ComparePassword(hashPassword string, password string) bool {
 	p := []byte(password)
 	h := []byte(hashPassword)

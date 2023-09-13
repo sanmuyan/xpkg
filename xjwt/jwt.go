@@ -5,9 +5,10 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+// CreateToken 创建 JWT，key 必须大于等于32
 func CreateToken(claims jwt.Claims, key string) (string, error) {
-	if len(key) < 16 {
-		return "", errors.New("key length less 16")
+	if len(key) < 32 {
+		return "", errors.New("key length must greater than 32")
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenStr, err := token.SignedString([]byte(key))
@@ -17,6 +18,7 @@ func CreateToken(claims jwt.Claims, key string) (string, error) {
 	return tokenStr, nil
 }
 
+// ParseToken 解析 JWT
 func ParseToken(tokenStr string, key string, claims jwt.Claims) (*jwt.Token, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(*jwt.Token) (any, error) {
 		return []byte(key), nil

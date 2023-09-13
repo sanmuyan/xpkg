@@ -7,6 +7,7 @@ import (
 	"github.com/sanmuyan/xpkg/xconstant"
 )
 
+// Encode 用于 TCP 包编码
 func Encode(data []byte) ([]byte, error) {
 	length := int32(len(data))
 	pkg := new(bytes.Buffer)
@@ -21,6 +22,7 @@ func Encode(data []byte) ([]byte, error) {
 	return pkg.Bytes(), nil
 }
 
+// Decode 用于 TCP 包解码
 func Decode(reader *bufio.Reader) ([]byte, error) {
 	lengthByte, err := reader.Peek(4)
 	if err != nil {

@@ -27,6 +27,7 @@ type Request struct {
 	Response *Response
 }
 
+// Request 支持普通 HTTP 请求
 func (c *Request) Request() (*Response, error) {
 	req, err := http.NewRequest(c.Config.Method, c.Config.URL, bytes.NewReader(c.Config.Body))
 	if err != nil {
