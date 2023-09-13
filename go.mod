@@ -1,4 +1,4 @@
-module github.com/sanmuyan/x
+module github.com/sanmuyan/xpkg
 
 go 1.21.0
 

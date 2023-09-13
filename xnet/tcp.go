@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
-	"github.com/sanmuyan/x/xconstant"
+	"github.com/sanmuyan/xpkg/xconstant"
 )
 
 func Encode(data []byte) ([]byte, error) {
