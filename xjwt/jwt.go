@@ -8,7 +8,7 @@ import (
 // CreateToken 创建 JWT，key 必须大于等于32
 func CreateToken(claims jwt.Claims, key string) (string, error) {
 	if len(key) < 32 {
-		return "", errors.New("key length must greater than 32")
+		return "", errors.New("key length invalid")
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenStr, err := token.SignedString([]byte(key))

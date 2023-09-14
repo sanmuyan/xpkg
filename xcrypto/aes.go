@@ -13,6 +13,9 @@ import (
 
 // EncryptCFB CFB 字符串加密，加密 key 长度必等于32
 func EncryptCFB(plaintext string, key string) (string, error) {
+	if len(key) != 32 {
+		return "", errors.New("key length invalid")
+	}
 	plaintextByte := []byte(plaintext)
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {

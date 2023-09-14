@@ -1,9 +1,11 @@
 package xconstant
 
-import "errors"
+import (
+	"errors"
+)
 
 // 错误定义
 
 var (
-	BufferedTooSmallError = errors.New("BufferedTooSmall")
+	BufferedTooSmallError = errors.New("buffered too small")
 )

@@ -2,16 +2,17 @@ package xnet
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 )
 
 func isOnePort(port string) bool {
-	_port, err := strconv.Atoi(port)
+	p, err := strconv.Atoi(port)
 	if err != nil {
 		return false
 	}
-	if _port >= 0 && _port <= 65535 {
+	if p >= 0 && p <= 65535 {
 		return true
 	}
 	return false
@@ -22,7 +23,9 @@ func isPortRange(port string) bool {
 		portRange := strings.Split(port, "-")
 		if len(portRange) == 2 {
 			if isOnePort(portRange[0]) && isOnePort(portRange[1]) {
-				if portRange[0] <= portRange[1] {
+				minPort, _ := strconv.Atoi(portRange[0])
+				maxPort, _ := strconv.Atoi(portRange[1])
+				if minPort <= maxPort {
 					return true
 				}
 			}
@@ -46,58 +49,59 @@ func isMultiplePorts(port string) bool {
 
 // IsPort 判断是否是网络端口，格式支持 80 1-100 22,23
 func IsPort[T ~int | ~string](port T) bool {
-	_port := fmt.Sprint(port)
-	if isOnePort(_port) || isMultiplePorts(_port) || isPortRange(_port) {
+	p := fmt.Sprint(port)
+	if isOnePort(p) || isMultiplePorts(p) || isPortRange(p) {
 		return true
 	}
 	return false
 }
 
-func generatePortRange(port string) (res []int) {
+func generatePortRange(port string) (portList []int) {
 	portRange := strings.Split(port, "-")
 	minPort, _ := strconv.Atoi(portRange[0])
 	maxPort, _ := strconv.Atoi(portRange[1])
 	for i := minPort; i <= maxPort; i++ {
-		res = append(res, i)
+		portList = append(portList, i)
 	}
-	return res
+	return portList
 }
 
-func generateMultiplePorts(port string) (res []int) {
+func generateMultiplePorts(port string) (portList []int) {
 	for _, v := range strings.Split(port, ",") {
 		if isPortRange(v) {
-			res = append(res, generatePortRange(v)...)
+			portList = append(portList, generatePortRange(v)...)
 		} else {
-			_port, _ := strconv.Atoi(v)
-			res = append(res, _port)
+			p, _ := strconv.Atoi(v)
+			portList = append(portList, p)
 		}
 	}
-	return res
+	return portList
 }
 
 // GeneratePorts 生成端口范围的所有端口
-func GeneratePorts[T ~int | ~string](port T) (res []int) {
+func GeneratePorts[T ~int | ~string](port T) (portList []int) {
 	p := fmt.Sprint(port)
 	if IsPort(p) {
 		if isOnePort(p) {
 			_p, _ := strconv.Atoi(p)
-			res = append(res, _p)
+			portList = append(portList, _p)
 		}
 		if isPortRange(p) {
-			res = append(res, generatePortRange(p)...)
+			portList = append(portList, generatePortRange(p)...)
 		}
 		if isMultiplePorts(p) {
-			res = append(res, generateMultiplePorts(p)...)
+			portList = append(portList, generateMultiplePorts(p)...)
 		}
 	}
-	for i := 0; i < len(res); i++ {
-		for j := i + 1; j < len(res); j++ {
-			if res[i] == res[j] {
-				res = append(res[:j], res[j+1:]...)
+	for i := 0; i < len(portList); i++ {
+		for j := i + 1; j < len(portList); j++ {
+			if portList[i] == portList[j] {
+				portList = append(portList[:j], portList[j+1:]...)
 			}
 		}
 	}
-	return res
+	sort.Ints(portList)
+	return portList
 }
 
 // IsAllowPort 判断是端口是否在某个端口范围
@@ -111,10 +115,8 @@ func IsAllowPort[T ~int | ~string](allowPorts, port T) bool {
 	if len(ports) == 0 {
 		return false
 	}
-	for _, v := range ports {
-		if v == portInt {
-			return true
-		}
+	if portInt >= ports[0] && portInt <= ports[len(ports)-1] {
+		return true
 	}
 	return false
 }
