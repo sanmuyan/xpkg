@@ -8,4 +8,5 @@ import (
 
 var (
 	BufferedTooSmallError = errors.New("buffered too small")
+	BadParameter          = errors.New("bad parameter")
 )
