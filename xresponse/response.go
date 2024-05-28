@@ -70,6 +70,16 @@ func (r *Response) WithMsg(msg string) *Response {
 	return r
 }
 
+func (r *Response) WithError(err *Error) *Response {
+	if err == nil {
+		return r
+	}
+	if err.IsRespUser {
+		r.Message = err.Err.Error()
+	}
+	return r
+}
+
 func (r *Response) Response(rf Framework) {
 	r.defaultSet()
 	rf.SetFramework(r)
