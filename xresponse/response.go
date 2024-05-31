@@ -80,6 +80,19 @@ func (r *Response) WithError(err *Error) *Response {
 	return r
 }
 
+func (r *Response) FailWithError(err *Error, code ...HTTPCode) *Response {
+	if len(code) > 0 {
+		r.Fail(code[0])
+	} else {
+		r.Fail(HttpInternalServerError)
+	}
+	if err.Code > 0 {
+		r.Fail(err.Code)
+		return r.WithError(err)
+	}
+	return r.WithError(err)
+}
+
 func (r *Response) Response(rf Framework) {
 	r.defaultSet()
 	rf.SetFramework(r)
