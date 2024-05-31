@@ -1,5 +1,7 @@
 package xutil
 
+import "regexp"
+
 // xutil 不允许使用第三方库
 
 // PtrTo 把值转为指针
@@ -44,4 +46,12 @@ func IsSubPath(parentPath, subPath string) bool {
 		return true
 	}
 	return false
+}
+
+// IsUsername 判断是否为用户名
+func IsUsername(s string) bool {
+	if ok := regexp.MustCompile(`^[a-z][a-z\d]{3,29}$`).MatchString(s); !ok {
+		return false
+	}
+	return true
 }
