@@ -24,26 +24,23 @@ func ComparableDeduplication[T comparable](l []T) []T {
 
 // IsSubPath 判断是否为子路径
 func IsSubPath(parentPath, subPath string) bool {
-	p := []byte(parentPath)
-	s := []byte(subPath)
-	if p[0] != 47 || s[0] != 47 || len(p) >= len(s) {
+	pl := len(parentPath)
+	sl := len(subPath)
+	if pl == 0 || sl == 0 || pl >= sl {
 		return false
 	}
-	j := 0
-	for index := range p {
-		if len(s) == index {
-			break
-		}
-		if p[index] == s[index] {
-			j = index
-		}
+	if parentPath[0] != '/' || subPath[0] != '/' {
+		return false
 	}
-	// 获取两个路径相等的部分
-	// p 相等的部分以 / 结尾  例子 /api/ /api/user
-	// s 相等的部分下一个元素等于 / 例子 /api /api/user
-	// s 相等的部分下一个元素等于 s 例子 /api/user /api/users
-	if p[j] == 47 || s[j+1] == 47 || s[j+1] == 115 {
-		return true
+	if subPath[0:pl] == parentPath {
+		// /api /api/user
+		if subPath[pl] == '/' || parentPath[pl-1] == '/' {
+			return true
+		}
+		// /api/user /api/users
+		if subPath[pl] == 's' && sl == pl+1 {
+			return true
+		}
 	}
 	return false
 }
