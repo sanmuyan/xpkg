@@ -9,8 +9,8 @@ func PtrTo[T any](v T) *T {
 	return &v
 }
 
-// ComparableDeduplication 数组去重
-func ComparableDeduplication[T comparable](l []T) []T {
+// Deduplication 数组去重
+func Deduplication[T comparable](l []T) []T {
 	uniqueMap := make(map[T]struct{})
 	var result []T
 	for _, item := range l {
@@ -51,4 +51,34 @@ func IsUsername(s string) bool {
 		return false
 	}
 	return true
+}
+
+// IsZero 判断可比较类型否为非零
+func IsZero[T comparable](vals ...T) bool {
+	if len(vals) == 0 {
+		return true
+	}
+	var z T
+	for _, v := range vals {
+		if v == z {
+			return true
+		}
+	}
+	return false
+}
+
+// IsContains 判断是否为数组成员
+func IsContains[T comparable](v T, vals []T) bool {
+	if len(vals) == 0 {
+		return false
+	}
+	m := make(map[T]struct{}, len(vals))
+	for _, _v := range vals {
+		m[_v] = struct{}{}
+	}
+	_, ok := m[v]
+	if ok {
+		return true
+	}
+	return false
 }
