@@ -22,3 +22,11 @@ func TestPassword(t *testing.T) {
 		t.Error("invalid password")
 	}
 }
+
+func TestGetTOTPToken(t *testing.T) {
+	token, err := GetTOTPToken("MSZLB437XWVC4Z3M", 30)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(token)
+}
