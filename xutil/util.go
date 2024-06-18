@@ -82,3 +82,8 @@ func IsContains[T comparable](v T, vals []T) bool {
 	}
 	return false
 }
+
+// RemoveError 去除错误返回
+func RemoveError[T any](data T, err error) T {
+	return data
+}
