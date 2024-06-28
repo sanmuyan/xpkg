@@ -28,15 +28,23 @@ func TestCFB(t *testing.T) {
 
 	type TestData struct {
 		Ciphertext string
+		T2         *struct {
+			Ciphertext string
+		}
 	}
 	testData := &TestData{
 		Ciphertext: ciphertext,
+		T2: &struct {
+			Ciphertext string
+		}{
+			Ciphertext: ciphertext,
+		},
 	}
 	err = DecryptCFBToStruct(testData, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
 	if err != nil {
 		t.Error(err)
 	}
-	if testData.Ciphertext != "123456" {
-		t.Error(testData.Ciphertext)
+	if testData.Ciphertext != "123456" || testData.T2.Ciphertext != "123456" {
+		t.Error(testData.Ciphertext, testData.T2.Ciphertext)
 	}
 }

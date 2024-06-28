@@ -1,6 +1,10 @@
 package xutil
 
-import "regexp"
+import (
+	"errors"
+	"reflect"
+	"regexp"
+)
 
 // xutil 不允许使用第三方库
 
@@ -86,4 +90,38 @@ func IsContains[T comparable](v T, vals []T) bool {
 // RemoveError 去除错误返回
 func RemoveError[T any](data T, err error) T {
 	return data
+}
+
+// IsZeroOfRefVal 判断反射类型是否为零值
+func IsZeroOfRefVal(vals ...reflect.Value) bool {
+	if len(vals) == 0 {
+		return true
+	}
+	for _, v := range vals {
+		if reflect.DeepEqual(v.Interface(), reflect.Zero(v.Type()).Interface()) {
+			return true
+		}
+	}
+	return false
+}
+
+// FillObj 使用 s 填充 t 对象但排除零值
+func FillObj(s, t any) error {
+	sv := reflect.ValueOf(s)
+	tv := reflect.ValueOf(t)
+	if sv.Kind() != reflect.Ptr || tv.Kind() != reflect.Ptr {
+		return errors.New("s and t must be pointer")
+	}
+	sve := sv.Elem()
+	tve := tv.Elem()
+	if sve.Kind() != tve.Kind() || sv.Type() != tv.Type() {
+		return errors.New("s and t must be same type")
+	}
+	for i := 0; i < tve.NumField(); i++ {
+		v := sve.Field(i)
+		if !IsZeroOfRefVal(v) || v.Type().Kind() == reflect.Bool {
+			tve.Field(i).Set(sve.Field(i))
+		}
+	}
+	return nil
 }

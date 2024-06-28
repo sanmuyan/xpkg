@@ -12,7 +12,7 @@ import (
 )
 
 // GetTOTPToken 生成基于时间的一次性密码 (TOTP)
-func GetTOTPToken(secret string, interval uint8) (string, error) {
+func GetTOTPToken(secret string, interval uint8, timestamp int64) (string, error) {
 	secret = strings.ToUpper(strings.ReplaceAll(secret, " ", ""))
 
 	key, err := base32.StdEncoding.DecodeString(secret)
@@ -20,7 +20,7 @@ func GetTOTPToken(secret string, interval uint8) (string, error) {
 		return "", err
 	}
 
-	counter := time.Now().Unix() / int64(interval)
+	counter := timestamp / int64(interval)
 
 	counterBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(counterBytes, uint64(counter))
@@ -67,4 +67,24 @@ func IsTOTPSecret(secret string, length uint8) bool {
 		}
 	}
 	return true
+}
+
+// ValidateTOTPToken 验证 TOTP Token
+func ValidateTOTPToken(secret string, userCode string, interval uint8, gracePeriod uint8) (bool, error) {
+	currentTime := time.Now()
+	count := 1
+	if gracePeriod > 0 {
+		count += int(gracePeriod)
+	}
+	for i := 0; i < count; i++ {
+		expectedCode, err := GetTOTPToken(secret, interval, currentTime.Add(-time.Duration(i*int(interval))*time.Second).Unix())
+		if err != nil {
+			return false, err
+		}
+		if expectedCode == userCode {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
