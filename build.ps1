@@ -5,12 +5,12 @@ if ($currentTag -match "v(\d+)\.(\d+)\.(\d+)") {
     $minor = [int]$matches[2]
     $patch = [int]$matches[3]
 
-    if ($patch -ge 99 ) {
+    if ($patch -eq 99 ) {
         $minor = $minor + 1
         $patch = -1
     }
 
-    if ($minor -ge 99 ) {
+    if ($minor -eq 100) {
         $major = $major + 1
         $minor = 0
     }
