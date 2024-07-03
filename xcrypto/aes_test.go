@@ -31,6 +31,7 @@ func TestCFB(t *testing.T) {
 		T2         *struct {
 			Ciphertext string
 		}
+		T3 *string
 	}
 	testData := &TestData{
 		Ciphertext: ciphertext,
@@ -39,12 +40,13 @@ func TestCFB(t *testing.T) {
 		}{
 			Ciphertext: ciphertext,
 		},
+		T3: &ciphertext,
 	}
 	err = DecryptCFBToStruct(testData, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
 	if err != nil {
 		t.Error(err)
 	}
-	if testData.Ciphertext != "123456" || testData.T2.Ciphertext != "123456" {
-		t.Error(testData.Ciphertext, testData.T2.Ciphertext)
+	if testData.Ciphertext != "123456" || testData.T2.Ciphertext != "123456" || *testData.T3 != "123456" {
+		t.Error(testData.Ciphertext, testData.T2.Ciphertext, *testData.T3)
 	}
 }

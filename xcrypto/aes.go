@@ -53,27 +53,39 @@ func DecryptCFB(ciphertext string, key string) (string, error) {
 
 // DecryptCFBToStruct 将结构体中的加密字段转换为明文
 func DecryptCFBToStruct(x any, secretKey string) error {
-	v := reflect.ValueOf(x)
-	if v.Kind() != reflect.Ptr {
+	xv := reflect.ValueOf(x)
+	if xv.Kind() != reflect.Ptr {
 		return errors.New("not a pointer")
 	}
-	ve := v.Elem()
+	ve := xv.Elem()
 	if ve.Kind() == reflect.Struct {
 		for i := 0; i < ve.NumField(); i++ {
-			k := ve.Field(i)
-			switch k.Type().Kind() {
+			fv := ve.Field(i)
+			switch fv.Kind() {
 			case reflect.String:
-				plaintext, err := DecryptCFB(k.String(), secretKey)
+				plaintext, err := DecryptCFB(fv.String(), secretKey)
 				if err != nil {
 					return err
 				}
-				v.Elem().Field(i).SetString(plaintext)
+				fv.SetString(plaintext)
 			case reflect.Ptr:
-				if err := DecryptCFBToStruct(k.Interface(), secretKey); err != nil {
-					return err
+				if fv.IsNil() {
+					continue
+				}
+				switch fv.Elem().Kind() {
+				case reflect.String:
+					plaintext, err := DecryptCFB(fv.Elem().String(), secretKey)
+					if err != nil {
+						return err
+					}
+					fv.Set(reflect.ValueOf(&plaintext))
+				case reflect.Struct:
+					if err := DecryptCFBToStruct(fv.Interface(), secretKey); err != nil {
+						return err
+					}
+				default:
 				}
 			default:
-				return errors.New("unsupported type")
 			}
 		}
 	}

@@ -114,13 +114,35 @@ func FillObj(s, t any) error {
 	}
 	sve := sv.Elem()
 	tve := tv.Elem()
-	if sve.Kind() != tve.Kind() || sv.Type() != tv.Type() {
+	if sve.Kind() != reflect.Struct || sv.Type() != tv.Type() {
 		return errors.New("s and t must be same type")
 	}
-	for i := 0; i < tve.NumField(); i++ {
-		v := sve.Field(i)
-		if !IsZeroOfRefVal(v) || v.Type().Kind() == reflect.Bool {
-			tve.Field(i).Set(sve.Field(i))
+	tte := reflect.TypeOf(t).Elem()
+	for i := 0; i < tte.NumField(); i++ {
+		sfv := sve.Field(i)
+		tfv := tve.Field(i)
+		switch sfv.Kind() {
+		case reflect.Struct:
+			if err := FillObj(sfv.Addr().Interface(), tfv.Addr().Interface()); err != nil {
+				return err
+			}
+		case reflect.Ptr:
+			if !sfv.IsNil() && !tfv.IsNil() {
+				if sfv.Elem().Kind() == reflect.Struct {
+					if err := FillObj(sfv.Interface(), tfv.Interface()); err != nil {
+						return err
+					}
+				}
+			}
+		default:
+			tag := tte.Field(i).Tag.Get("copy")
+			if tag == "ignore" {
+				continue
+			}
+			if !IsZeroOfRefVal(sfv) || sfv.Kind() == reflect.Bool || tag == "force" {
+				tfv.Set(sfv)
+				continue
+			}
 		}
 	}
 	return nil
