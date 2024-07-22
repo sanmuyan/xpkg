@@ -2,6 +2,7 @@ package xutil
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"regexp"
 )
@@ -22,6 +23,26 @@ func Deduplication[T comparable](l []T) []T {
 			uniqueMap[item] = struct{}{}
 			result = append(result, item)
 		}
+	}
+	return result
+}
+
+// StructDeduplication 结构体类型数组去重
+func StructDeduplication[T comparable](l []T, uqField string) []T {
+	uniqueMap := make(map[string]T)
+	var result []T
+	for _, item := range l {
+		uqIndexValue := reflect.ValueOf(item).FieldByName(uqField)
+		if uqIndexValue.IsNil() {
+			return l
+		}
+		uqValue := fmt.Sprintf("%v", uqIndexValue)
+		if _, ok := uniqueMap[uqValue]; !ok {
+			uniqueMap[uqValue] = item
+		}
+	}
+	for _, item := range uniqueMap {
+		result = append(result, item)
 	}
 	return result
 }
@@ -107,18 +128,35 @@ func IsZeroOfRefVal(vals ...reflect.Value) bool {
 
 // FillObj 使用 s 填充 t 对象但排除零值
 func FillObj(s, t any) error {
+	copyFunc := func(i int, ste reflect.Type, sfv, tfv reflect.Value) {
+		tag := ste.Field(i).Tag.Get("copy")
+		if tag == "ignore" {
+			return
+		}
+		if !IsZeroOfRefVal(sfv) || sfv.Kind() == reflect.Bool || tag == "force" {
+			tfv.Set(sfv)
+			return
+		}
+	}
 	sv := reflect.ValueOf(s)
 	tv := reflect.ValueOf(t)
 	if sv.Kind() != reflect.Ptr || tv.Kind() != reflect.Ptr {
 		return errors.New("s and t must be pointer")
 	}
-	sve := sv.Elem()
-	tve := tv.Elem()
-	if sve.Kind() != reflect.Struct || sv.Type() != tv.Type() {
+	if sv.IsNil() || tv.IsNil() {
+		return errors.New("s and t must not be nil")
+	}
+	if sv.Type().String() != tv.Type().String() {
 		return errors.New("s and t must be same type")
 	}
-	tte := reflect.TypeOf(t).Elem()
-	for i := 0; i < tte.NumField(); i++ {
+	sve := sv.Elem()
+	tve := tv.Elem()
+	if sve.Kind() != reflect.Struct {
+		tve.Set(sve)
+		return nil
+	}
+	ste := reflect.TypeOf(t).Elem()
+	for i := 0; i < ste.NumField(); i++ {
 		sfv := sve.Field(i)
 		tfv := tve.Field(i)
 		switch sfv.Kind() {
@@ -132,17 +170,12 @@ func FillObj(s, t any) error {
 					if err := FillObj(sfv.Interface(), tfv.Interface()); err != nil {
 						return err
 					}
+					continue
 				}
 			}
+			copyFunc(i, ste, sfv, tfv)
 		default:
-			tag := tte.Field(i).Tag.Get("copy")
-			if tag == "ignore" {
-				continue
-			}
-			if !IsZeroOfRefVal(sfv) || sfv.Kind() == reflect.Bool || tag == "force" {
-				tfv.Set(sfv)
-				continue
-			}
+			copyFunc(i, ste, sfv, tfv)
 		}
 	}
 	return nil
