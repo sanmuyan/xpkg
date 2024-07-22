@@ -22,6 +22,7 @@ if ($currentTag -match "v(\d+)\.(\d+)\.(\d+)") {
     git add .
     git commit -m $newTag
     git tag $newTag
+    git push
     git push --tags
 } else {
     Write-Error "Tag format is not valid. Expected format: vMAJOR.MINOR.PATCH"
