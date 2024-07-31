@@ -5,7 +5,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-// CreateToken 创建 JWT，key 必须大于等于32
+// CreateToken 创建 JWT，密钥长度不能小于32
 func CreateToken(claims jwt.Claims, key string) (string, error) {
 	if len(key) < 32 {
 		return "", errors.New("key length invalid")

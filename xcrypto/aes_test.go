@@ -50,3 +50,8 @@ func TestCFB(t *testing.T) {
 		t.Error(testData.Ciphertext, testData.T2.Ciphertext, *testData.T3)
 	}
 }
+
+func TestName2(t *testing.T) {
+	x := "237b42a8-e485-452d-aa7b-0e0c670fe0fe"
+	t.Log(EncryptCFB(x, "onoYKD9o59EhV9BFL1yu45PB702NR3bM"))
+}

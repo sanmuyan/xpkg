@@ -11,9 +11,11 @@ import (
 	"unicode/utf8"
 )
 
-// EncryptCFB CFB 字符串加密，加密 key 长度必等于32
+// EncryptCFB CFB 字符串加密，合法的密钥长度为16(aes-128) 24(aes-192) 32(aes-256)
 func EncryptCFB(plaintext string, key string) (string, error) {
-	if len(key) != 32 {
+	switch len(key) {
+	case 16, 24, 32:
+	default:
 		return "", errors.New("key length invalid")
 	}
 	plaintextByte := []byte(plaintext)
