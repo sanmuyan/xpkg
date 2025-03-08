@@ -7,7 +7,6 @@ import (
 )
 
 func GetDataSpeed(b, s int) string {
-	fmt.Println(b, s)
 	bit := b * 8 / s
 	if bit >= 1024 && bit < 1024*1024 {
 		f := float64(bit) / float64(1024)
