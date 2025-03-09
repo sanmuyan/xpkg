@@ -24,9 +24,9 @@ func GetDataSpeed(b, s int) string {
 		return f
 	}
 	if bit >= 1024*1024*1024 {
-		f := fmt.Sprintf("%.2fMb/s", bit/(1024*1024*1024))
+		f := fmt.Sprintf("%.2fGb/s", bit/(1024*1024*1024))
 		sl := strings.Split(f, ".")
-		if sl[1] == "00Mb/s" {
+		if sl[1] == "00Gb/s" {
 			return fmt.Sprintf("%.0fGb/s", bit/(1024*1024*1024))
 		}
 		return f
