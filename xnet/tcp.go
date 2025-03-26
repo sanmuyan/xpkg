@@ -13,7 +13,7 @@ func Encode(data []byte) ([]byte, error) {
 
 	pkg := make([]byte, 4+len(data))
 
-	binary.LittleEndian.PutUint32(pkg[:4], length)
+	binary.BigEndian.PutUint32(pkg[:4], length)
 
 	copy(pkg[4:], data)
 
@@ -27,7 +27,7 @@ func Decode(reader *bufio.Reader) ([]byte, error) {
 		return nil, err
 	}
 
-	length := binary.LittleEndian.Uint32(lengthByte)
+	length := binary.BigEndian.Uint32(lengthByte)
 
 	if length > xconstant.PackageMaxLength {
 		return nil, xconstant.PackageTooLengthError

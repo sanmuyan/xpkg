@@ -58,7 +58,7 @@ func TestTCPEncodeAndDecode(t *testing.T) {
 			_ = conn.Close()
 		}()
 		reader := bufio.NewReader(conn)
-		for i := 0; i < 100; i++ {
+		for i := 0; i < 10000; i++ {
 			err := encode(conn)
 			if err != nil {
 				t.Error(err)
@@ -80,10 +80,8 @@ func TestTCPEncodeAndDecode(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	count := 1
 	reader := bufio.NewReader(conn)
 	for {
-		t.Logf("count: %d", count)
 		d, err := decode(reader)
 		if err != nil {
 			if err == io.EOF {
@@ -101,6 +99,5 @@ func TestTCPEncodeAndDecode(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		count++
 	}
 }
