@@ -189,7 +189,7 @@ func FillObj(s, t any) error {
 func Remove(f string) error {
 	f = filepath.Clean(f)
 	if strings.HasSuffix(f, "*") {
-		fPrefix := filepath.Join(strings.TrimSuffix(f, "*"))
+		fPrefix := strings.TrimSuffix(f, "*")
 		basePath := filepath.Dir(fPrefix)
 		if strings.HasSuffix(f, "/*") {
 			basePath = fPrefix
