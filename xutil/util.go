@@ -3,8 +3,11 @@ package xutil
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
+	"strings"
 )
 
 // xutil 不允许使用第三方库
@@ -179,4 +182,32 @@ func FillObj(s, t any) error {
 		}
 	}
 	return nil
+}
+
+// Remove 删除文件或文件夹，支持通配符
+func Remove(f string) error {
+	if strings.HasSuffix(f, "*") {
+		fPrefix := filepath.Join(strings.TrimSuffix(f, "*"))
+		var basePath string
+		if strings.HasSuffix(f, "/*") {
+			basePath = fPrefix
+		} else {
+			basePath = filepath.Dir(fPrefix)
+		}
+		entries, err := os.ReadDir(basePath)
+		if err != nil {
+			return err
+		}
+		for _, entry := range entries {
+			full := filepath.Join(basePath, entry.Name())
+			if strings.HasPrefix(full, fPrefix) {
+				err := os.RemoveAll(full)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+	return os.RemoveAll(f)
 }
