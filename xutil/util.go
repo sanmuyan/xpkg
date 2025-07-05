@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -186,13 +187,17 @@ func FillObj(s, t any) error {
 
 // Remove 删除文件或文件夹，支持通配符
 func Remove(f string) error {
+	f = filepath.Clean(f)
 	if strings.HasSuffix(f, "*") {
 		fPrefix := filepath.Join(strings.TrimSuffix(f, "*"))
-		var basePath string
+		basePath := filepath.Dir(fPrefix)
 		if strings.HasSuffix(f, "/*") {
 			basePath = fPrefix
-		} else {
-			basePath = filepath.Dir(fPrefix)
+		}
+		if runtime.GOOS == "windows" {
+			if strings.HasSuffix(f, "\\*") {
+				basePath = fPrefix
+			}
 		}
 		entries, err := os.ReadDir(basePath)
 		if err != nil {
