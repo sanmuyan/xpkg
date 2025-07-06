@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
-	"runtime"
-	"strings"
 )
 
 // xutil 不允许使用第三方库
@@ -187,32 +185,15 @@ func FillObj(s, t any) error {
 
 // Remove 删除文件或文件夹，支持通配符
 func Remove(f string) error {
-	f = filepath.Clean(f)
-	if strings.HasSuffix(f, "*") {
-		fPrefix := strings.TrimSuffix(f, "*")
-		basePath := filepath.Dir(fPrefix)
-		if strings.HasSuffix(f, "/*") {
-			basePath = fPrefix
-		}
-		if runtime.GOOS == "windows" {
-			if strings.HasSuffix(f, "\\*") {
-				basePath = fPrefix
-			}
-		}
-		entries, err := os.ReadDir(basePath)
+	matches, err := filepath.Glob(f)
+	if err != nil {
+		return err
+	}
+	for _, m := range matches {
+		err = os.RemoveAll(m)
 		if err != nil {
 			return err
 		}
-		for _, entry := range entries {
-			full := filepath.Join(basePath, entry.Name())
-			if strings.HasPrefix(full, fPrefix) {
-				err := os.RemoveAll(full)
-				if err != nil {
-					return err
-				}
-			}
-		}
-		return nil
 	}
-	return os.RemoveAll(f)
+	return nil
 }
