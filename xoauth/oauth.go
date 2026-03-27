@@ -27,11 +27,11 @@ func (c *Client) GetAuthURL(state string) string {
 	return c.config.AuthCodeURL(state)
 }
 
-func (c *Client) GetUserInfo(ctx context.Context, code string, userInfoURL string, user UserInfo) error {
-	token, err := c.config.Exchange(ctx, code)
-	if err != nil {
-		return err
-	}
+func (c *Client) GetToken(ctx context.Context, code string) (*oauth2.Token, error) {
+	return c.config.Exchange(ctx, code)
+}
+
+func (c *Client) GetUserInfo(ctx context.Context, token *oauth2.Token, userInfoURL string, user UserInfo) error {
 	client := c.config.Client(ctx, token)
 	resp, err := client.Get(userInfoURL)
 	if err != nil {
