@@ -41,15 +41,13 @@ func GetTOTPToken(secret string, interval uint8, timestamp int64) (string, error
 	return fmt.Sprintf("%06d", code), nil
 }
 
-// GenerateTOTPSecret 生成 TOTP 密钥，长度必须为 16(128位) 20(160位) 32(256位)
-func GenerateTOTPSecret(length uint8) (string, error) {
-	switch length {
-	case 16, 20, 32:
-	default:
-		return "", fmt.Errorf("invalid length: %d", length)
+// GenerateTOTPSecret 生成 TOTP 密钥，长度不能小于 10(80位长度16的 Secret)
+func GenerateTOTPSecret(byteLength uint8) (string, error) {
+	if byteLength < 10 {
+		return "", fmt.Errorf("byteLength must be >= 10")
 	}
 	// 创建一个包含随机字节的数组
-	secret := make([]byte, length)
+	secret := make([]byte, byteLength)
 	_, err := rand.Read(secret)
 	if err != nil {
 		return "", err
@@ -64,9 +62,7 @@ func GenerateTOTPSecret(length uint8) (string, error) {
 
 // IsTOTPSecret 判断是否为合法的 TOTP 密钥
 func IsTOTPSecret(secret string) bool {
-	switch len(secret) {
-	case 26, 32, 52:
-	default:
+	if len(secret) < 16 {
 		return false
 	}
 	base32Chars := "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
