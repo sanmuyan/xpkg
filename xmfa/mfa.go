@@ -65,11 +65,9 @@ func IsTOTPSecret(secret string) bool {
 	if len(secret) < 16 {
 		return false
 	}
-	base32Chars := "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
-	for _, char := range secret {
-		if !strings.ContainsRune(base32Chars, char) {
-			return false
-		}
+	_, err := base32.StdEncoding.DecodeString(secret)
+	if err != nil {
+		return false
 	}
 	return true
 }
