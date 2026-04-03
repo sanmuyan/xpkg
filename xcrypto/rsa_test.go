@@ -31,12 +31,26 @@ func TestPKCSRSA(t *testing.T) {
 	if err != nil {
 		t.Errorf("encrypt rsa: %s", err)
 	}
-	t.Logf("ciphertext: %s", ciphertext)
+	t.Logf("ciphertextPKCS: %s", ciphertext)
 	plaintext, err := DecryptPKCSRSA(ciphertext, _privateKey)
 	if err != nil {
 		t.Errorf("decrypt rsa: %s", err)
 	}
-	t.Logf("plaintext: %s", plaintext)
+	t.Logf("plaintextPKCS: %s", plaintext)
+	if msg != plaintext {
+		t.Errorf("msg: %s, plaintext: %s", msg, plaintext)
+	}
+
+	ciphertext, err = EncryptOAEP(msg, _publicKey)
+	if err != nil {
+		t.Errorf("encrypt oaep: %s", err)
+	}
+	t.Logf("ciphertextOAEP: %s", ciphertext)
+	plaintext, err = DecryptOAEP(ciphertext, _privateKey)
+	if err != nil {
+		t.Errorf("decrypt oaep: %s", err)
+	}
+	t.Logf("plaintextOAEP: %s", plaintext)
 	if msg != plaintext {
 		t.Errorf("msg: %s, plaintext: %s", msg, plaintext)
 	}
