@@ -15,6 +15,7 @@ func TestToken(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	t.Logf("token: %s", token)
 	sc := &jwt.RegisteredClaims{}
 	_, err = ParseToken(token, key, sc)
 	if err != nil {
@@ -30,14 +31,15 @@ func TestToken(t *testing.T) {
 }
 
 func TestRSAToken(t *testing.T) {
-	key, _ := os.ReadFile("../assets/test_rsa.key")
+	key, _ := os.ReadFile("../assets/test_cert.key")
 	token, err := CreateTokenRSA(jwt.RegisteredClaims{
 		ID: "123456",
 	}, string(key))
 	if err != nil {
 		t.Error(err)
 	}
-	pub, _ := os.ReadFile("../assets/test_rsa.pem")
+	t.Logf("token: %s", token)
+	pub, _ := os.ReadFile("../assets/test_cert.pem")
 	sc := &jwt.RegisteredClaims{}
 	_, err = ParseTokenRSA(token, string(pub), sc)
 	if err != nil {
