@@ -11,7 +11,7 @@ import (
 	"errors"
 )
 
-// GenerateRSAKeyPair 生成 RSA 公钥私钥
+// GenerateRSAKeyPair 生成公钥私钥对
 func GenerateRSAKeyPair(bits int) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
@@ -20,7 +20,7 @@ func GenerateRSAKeyPair(bits int) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	return privateKey, &privateKey.PublicKey, nil
 }
 
-// RSAPrivateKeyToText RSA 私钥转成文本
+// RSAPrivateKeyToText 私钥转成 PEM
 func RSAPrivateKeyToText(key *rsa.PrivateKey) ([]byte, error) {
 	var privateKey = &pem.Block{
 		Type:  "RSA PRIVATE KEY",
@@ -34,15 +34,15 @@ func RSAPrivateKeyToText(key *rsa.PrivateKey) ([]byte, error) {
 	return bytBuff.Bytes(), nil
 }
 
-// RSAPublicKeyToText RSA 公钥转成文本
+// RSAPublicKeyToText 公钥转成 PEM
 func RSAPublicKeyToText(key *rsa.PublicKey) ([]byte, error) {
-	asn1Bytes, err := x509.MarshalPKIXPublicKey(key)
+	derPKIX, err := x509.MarshalPKIXPublicKey(key)
 	if err != nil {
 		return nil, err
 	}
 	publicKey := &pem.Block{
-		Type:  "RSA PUBLIC KEY",
-		Bytes: asn1Bytes,
+		Type:  "PUBLIC KEY",
+		Bytes: derPKIX,
 	}
 	bytBuff := bytes.NewBuffer([]byte{})
 	err = pem.Encode(bytBuff, publicKey)
@@ -52,7 +52,7 @@ func RSAPublicKeyToText(key *rsa.PublicKey) ([]byte, error) {
 	return bytBuff.Bytes(), nil
 }
 
-// TextToRSAPrivateKey RSA 私钥文本转为对象
+// TextToRSAPrivateKey PEM 转为私钥
 func TextToRSAPrivateKey(key []byte) (*rsa.PrivateKey, error) {
 	block, _ := pem.Decode(key)
 	if block == nil {
@@ -65,7 +65,7 @@ func TextToRSAPrivateKey(key []byte) (*rsa.PrivateKey, error) {
 	return privateKey, nil
 }
 
-// TextToRSAPublicKey RSA 公钥文本转为对象
+// TextToRSAPublicKey PEM 转为公钥
 func TextToRSAPublicKey(key []byte) (*rsa.PublicKey, error) {
 	block, _ := pem.Decode(key)
 	if block == nil {
@@ -79,7 +79,7 @@ func TextToRSAPublicKey(key []byte) (*rsa.PublicKey, error) {
 	return publicKey, nil
 }
 
-// EncryptPKCSRSA PKCS RSA 加密
+// EncryptPKCSRSA PKCS 加密
 func EncryptPKCSRSA(plaintext string, key *rsa.PublicKey) (string, error) {
 	ciphertext, err := rsa.EncryptPKCS1v15(rand.Reader, key, []byte(plaintext))
 	if err != nil {
@@ -88,7 +88,7 @@ func EncryptPKCSRSA(plaintext string, key *rsa.PublicKey) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-// DecryptPKCSRSA PKCS RSA 解密
+// DecryptPKCSRSA PKCS 解密
 func DecryptPKCSRSA(base64Ciphertext string, key *rsa.PrivateKey) (string, error) {
 	ciphertext, err := base64.StdEncoding.DecodeString(base64Ciphertext)
 	if err != nil {

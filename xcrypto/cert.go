@@ -13,8 +13,8 @@ import (
 	"time"
 )
 
-// CreateCert 创建一个 x509 证书
-func CreateCert(template *x509.Certificate) ([]byte, *rsa.PrivateKey, error) {
+// CreateCertDER 创建 x509 证书 DER
+func CreateCertDER(template *x509.Certificate) ([]byte, *rsa.PrivateKey, error) {
 	if template == nil {
 		template = &x509.Certificate{
 			SerialNumber: big.NewInt(1),
@@ -37,7 +37,20 @@ func CreateCert(template *x509.Certificate) ([]byte, *rsa.PrivateKey, error) {
 	return certDER, pr, nil
 }
 
-// CertToText 把证书转换成 PEM 文本
+// CreateCert 创建 x509 证书
+func CreateCert(template *x509.Certificate) (*x509.Certificate, *rsa.PrivateKey, error) {
+	certDER, pr, err := CreateCertDER(template)
+	if err != nil {
+		return nil, nil, err
+	}
+	cert, err := x509.ParseCertificate(certDER)
+	if err != nil {
+		return nil, nil, err
+	}
+	return cert, pr, nil
+}
+
+// CertToText 证书 DER 转换成 PEM
 func CertToText(certDER []byte) ([]byte, error) {
 	pemBlock := &pem.Block{
 		Type:  "CERTIFICATE",
@@ -50,18 +63,27 @@ func CertToText(certDER []byte) ([]byte, error) {
 	return pemBuffer.Bytes(), nil
 }
 
-// TextToCert 把 PEM 文本转换成证书
-func TextToCert(certText []byte) (*x509.Certificate, error) {
+// TextToCertDER PEM 转换成证书 DER
+func TextToCertDER(certText []byte) ([]byte, error) {
 	block, _ := pem.Decode(certText)
 	if block == nil {
 		return nil, errors.New("failed to decode certificate")
 	}
-	return x509.ParseCertificate(block.Bytes)
+	return block.Bytes, nil
 }
 
-// CreateCertToText 创建一个 x509 证书并转换为 PEM 格式
+// TextToCert PEM 转换成证书
+func TextToCert(certText []byte) (*x509.Certificate, error) {
+	certDER, err := TextToCertDER(certText)
+	if err != nil {
+		return nil, err
+	}
+	return x509.ParseCertificate(certDER)
+}
+
+// CreateCertToText 创建一个 x509 证书并转换为 PEM
 func CreateCertToText(template *x509.Certificate) ([]byte, []byte, error) {
-	certDER, pr, err := CreateCert(template)
+	certDER, pr, err := CreateCertDER(template)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -78,7 +100,7 @@ func CreateCertToText(template *x509.Certificate) ([]byte, []byte, error) {
 
 // CreateCertToTLS 创建一个 x509 证书并转换为 TLS 配置
 func CreateCertToTLS(template *x509.Certificate) (*tls.Config, error) {
-	certDER, pr, err := CreateCert(template)
+	certDER, pr, err := CreateCertDER(template)
 	if err != nil {
 		return nil, err
 	}

@@ -36,7 +36,7 @@ func ParseToken(tokenStr string, key string, claims jwt.Claims) (*jwt.Token, err
 	return token, nil
 }
 
-// CreateTokenRSA 创建 JWT，需要提供私钥 PEM 格式字符串
+// CreateTokenRSA 创建 JWT，需要提供 PEM 私钥
 func CreateTokenRSA(claims jwt.Claims, privateKeyStr string) (string, error) {
 	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(privateKeyStr))
 	if err != nil {
@@ -50,7 +50,7 @@ func CreateTokenRSA(claims jwt.Claims, privateKeyStr string) (string, error) {
 	return tokenStr, nil
 }
 
-// ParseTokenRSA 解析 JWT，需要提供公钥 PEM 格式字符串
+// ParseTokenRSA 解析 JWT，需要提供 PEM 公钥
 func ParseTokenRSA(tokenStr string, publicKeyStr string, claims jwt.Claims) (*jwt.Token, error) {
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(publicKeyStr))
 	if err != nil {

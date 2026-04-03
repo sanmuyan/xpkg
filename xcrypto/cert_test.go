@@ -9,10 +9,12 @@ func TestCert(t *testing.T) {
 	if err != nil {
 		t.Errorf("CreateCertToText error: %s", err)
 	}
-	t.Logf("cert: %s\nkey: %s", certText, prText)
+	t.Logf("cert: \n%s\nkey: \n%s", certText, prText)
 	cert, err := TextToCert(certText)
 	if err != nil {
 		t.Errorf("TextToCert error: %s", err)
 	}
-	t.Logf("cert common name: %s", cert.Subject.CommonName)
+	if cert.Subject.CommonName != "example.com" {
+		t.Error("TextToCert common name is not example.com")
+	}
 }
