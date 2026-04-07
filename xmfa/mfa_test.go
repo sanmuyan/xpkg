@@ -20,3 +20,11 @@ func TestValidateTOTPToken(t *testing.T) {
 	}
 	t.Log(valid)
 }
+
+func TestGenerateTOTPSecret(t *testing.T) {
+	secret, err := GenerateTOTPSecret(16)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(secret)
+}

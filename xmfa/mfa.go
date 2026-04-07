@@ -7,7 +7,6 @@ import (
 	"encoding/base32"
 	"encoding/binary"
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -16,7 +15,7 @@ func GetTOTPToken(secret string, interval uint8, timestamp int64) (string, error
 	if !IsTOTPSecret(secret) {
 		return "", fmt.Errorf("invalid secret: %s", secret)
 	}
-	key, err := base32.StdEncoding.DecodeString(secret)
+	key, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(secret)
 	if err != nil {
 		return "", err
 	}
@@ -54,10 +53,10 @@ func GenerateTOTPSecret(byteLength uint8) (string, error) {
 	}
 
 	// 使用Base32编码
-	base32Secret := base32.StdEncoding.EncodeToString(secret)
+	base32Secret := base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(secret)
 
-	// TOTP标准使用大写字母而没有填充字符"="
-	return strings.TrimRight(base32Secret, "="), nil
+	// TOTP 标准使用大写字母而没有填充字符"="
+	return base32Secret, nil
 }
 
 // IsTOTPSecret 判断是否为合法的 TOTP 密钥
@@ -65,7 +64,7 @@ func IsTOTPSecret(secret string) bool {
 	if len(secret) < 16 {
 		return false
 	}
-	_, err := base32.StdEncoding.DecodeString(secret)
+	_, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(secret)
 	if err != nil {
 		return false
 	}
