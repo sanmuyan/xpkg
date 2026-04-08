@@ -97,11 +97,11 @@ func EncryptGCM(plaintext string, key string) (string, error) {
 		return "", err
 	}
 
-	ciphertext := gcm.Seal(nil, nonce, []byte(plaintext), nil)
+	ciphertextData := gcm.Seal(nil, nonce, []byte(plaintext), nil)
 
-	result := append(nonce, ciphertext...)
+	ciphertext := append(nonce, ciphertextData...)
 
-	return hex.EncodeToString(result), nil
+	return hex.EncodeToString(ciphertext), nil
 }
 
 // DecryptGCM GCM 字符串解密
@@ -126,9 +126,9 @@ func DecryptGCM(ciphertext string, key string) (string, error) {
 		return "", errors.New("ciphertext too short")
 	}
 
-	nonce, nonceCiphertext := gcmCiphertext[:nonceSize], gcmCiphertext[nonceSize:]
+	nonce, ciphertextData := gcmCiphertext[:nonceSize], gcmCiphertext[nonceSize:]
 
-	plaintext, err := gcm.Open(nil, nonce, nonceCiphertext, nil)
+	plaintext, err := gcm.Open(nil, nonce, ciphertextData, nil)
 	if err != nil {
 		return "", err
 	}
