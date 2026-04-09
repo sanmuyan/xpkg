@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// GetTOTPToken 生成基于时间的一次性密码 (TOTP)
-func GetTOTPToken(secret string, interval uint8, timestamp int64) (string, error) {
+// GetTOTPCode 生成基于时间的一次性密码
+func GetTOTPCode(secret string, interval uint8, timestamp int64) (string, error) {
 	if !IsTOTPSecret(secret) {
 		return "", fmt.Errorf("invalid secret: %s", secret)
 	}
@@ -71,15 +71,15 @@ func IsTOTPSecret(secret string) bool {
 	return true
 }
 
-// ValidateTOTPToken 验证 TOTP Token
-func ValidateTOTPToken(secret string, userCode string, interval uint8, gracePeriod uint8) (bool, error) {
+// ValidateTOTPCode 验证 TOTP Code
+func ValidateTOTPCode(secret string, userCode string, interval uint8, gracePeriod uint8) (bool, error) {
 	currentTime := time.Now()
 	count := 1
 	if gracePeriod > 0 {
 		count += int(gracePeriod)
 	}
 	for i := 0; i < count; i++ {
-		expectedCode, err := GetTOTPToken(secret, interval, currentTime.Add(-time.Duration(i*int(interval))*time.Second).Unix())
+		expectedCode, err := GetTOTPCode(secret, interval, currentTime.Add(-time.Duration(i*int(interval))*time.Second).Unix())
 		if err != nil {
 			return false, err
 		}

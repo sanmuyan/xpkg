@@ -7,7 +7,7 @@ import (
 )
 
 // GenerateRandomString 生成随机字符串
-func GenerateRandomString(length int, containsNumbers, containsUppercase, containsLowercase, containsSpecial bool) string {
+func GenerateRandomString(length int, containsNumbers, containsUppercase, containsLowercase, containsSpecial bool) []byte {
 	const digits = "0123456789"
 	const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	const lowercase = "abcdefghijklmnopqrstuvwxyz"
@@ -47,5 +47,5 @@ func GenerateRandomString(length int, containsNumbers, containsUppercase, contai
 		s := characterSet[charIndex.Int64()]
 		result[i] = s
 	}
-	return string(result)
+	return result
 }

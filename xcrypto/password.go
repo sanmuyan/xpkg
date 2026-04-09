@@ -1,8 +1,9 @@
-package xbcrypt
+package xcrypto
 
 import (
-	"golang.org/x/crypto/bcrypt"
 	"regexp"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // IsPasswordComplexity 检查密码是否符合复杂度
@@ -32,19 +33,15 @@ func IsPasswordComplexity(s string, minLength int, minIncludeCase int) bool {
 	return true
 }
 
-// CreatePassword 创建密码
-func CreatePassword(password string) (hashPassword string) {
-	p := []byte(password)
-	h, _ := bcrypt.GenerateFromPassword(p, bcrypt.MinCost)
-	hashPassword = string(h)
-	return hashPassword
+// CreatePasswordHash 创建密码哈希值
+func CreatePasswordHash(password []byte) (hashPassword []byte) {
+	h, _ := bcrypt.GenerateFromPassword(password, bcrypt.MinCost)
+	return h
 }
 
 // ComparePassword 比较密码
-func ComparePassword(hashPassword string, password string) bool {
-	p := []byte(password)
-	h := []byte(hashPassword)
-	err := bcrypt.CompareHashAndPassword(h, p)
+func ComparePassword(hashPassword []byte, password []byte) bool {
+	err := bcrypt.CompareHashAndPassword(hashPassword, password)
 	if err != nil {
 		return false
 	}

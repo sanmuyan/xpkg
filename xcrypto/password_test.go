@@ -1,4 +1,4 @@
-package xbcrypt
+package xcrypto
 
 import (
 	"testing"
@@ -14,11 +14,11 @@ func TestPassword(t *testing.T) {
 	if IsPasswordComplexity("123aa#123", 8, 4) {
 		t.Error("invalid complexity")
 	}
-	hashPassword := CreatePassword("123AAaa#123")
-	if !ComparePassword(hashPassword, "123AAaa#123") {
+	hashPassword := CreatePasswordHash([]byte("123AAaa#123"))
+	if !ComparePassword(hashPassword, []byte("123AAaa#123")) {
 		t.Error("invalid password")
 	}
-	if ComparePassword(hashPassword, "123AAaa#123x") {
+	if ComparePassword(hashPassword, []byte("123AAaa#123x")) {
 		t.Error("invalid password")
 	}
 }

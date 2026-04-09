@@ -4,15 +4,14 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/hex"
+	"encoding/base64"
 	"errors"
 	"io"
 	"reflect"
-	"unicode/utf8"
 )
 
 // ValidAesKey 验证 AES 密钥长度是否合法，合法的密钥长度为16(aes-128) 24(aes-192) 32(aes-256)
-func ValidAesKey(key string) error {
+func ValidAesKey(key []byte) error {
 	switch len(key) {
 	case 16, 24, 32:
 		return nil
@@ -21,122 +20,105 @@ func ValidAesKey(key string) error {
 	}
 }
 
-// EncryptCFB CFB 字符串加密
-func EncryptCFB(plaintext string, key string) (string, error) {
-	if len(plaintext) == 0 {
-		return plaintext, nil
-	}
-	err := ValidAesKey(key)
+// EncryptCFB CFB 加密
+func EncryptCFB(plaintext, key []byte) (ciphertext []byte, err error) {
+	err = ValidAesKey(key)
 	if err != nil {
-		return plaintext, err
+		return
 	}
-	plaintextByte := []byte(plaintext)
-	block, err := aes.NewCipher([]byte(key))
+	block, err := aes.NewCipher(key)
 	if err != nil {
-		return plaintext, err
+		return
 	}
-	ciphertext := make([]byte, aes.BlockSize+len(plaintextByte))
+	ciphertext = make([]byte, aes.BlockSize+len(plaintext))
 	iv := ciphertext[:aes.BlockSize]
 	if _, err = io.ReadFull(rand.Reader, iv); err != nil {
-		return plaintext, err
+		return
 	}
 	stream := cipher.NewCFBEncrypter(block, iv)
-	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintextByte)
-	return hex.EncodeToString(ciphertext), nil
+	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
+	return
 }
 
-// DecryptCFB CFB 字符串解密
-func DecryptCFB(ciphertext string, key string) (string, error) {
-	if len(ciphertext) == 0 {
-		return ciphertext, nil
-	}
-	err := ValidAesKey(key)
+// DecryptCFB CFB 解密
+func DecryptCFB(ciphertext, key []byte) (plaintext []byte, err error) {
+	err = ValidAesKey(key)
 	if err != nil {
-		return ciphertext, err
+		return
 	}
-	plaintext, err := hex.DecodeString(ciphertext)
+	block, err := aes.NewCipher(key)
 	if err != nil {
-		return ciphertext, err
+		return
 	}
-	block, err := aes.NewCipher([]byte(key))
-	if err != nil {
-		return ciphertext, err
-	}
+	plaintext = append(plaintext, ciphertext...)
 	iv := plaintext[:aes.BlockSize]
 	plaintext = plaintext[aes.BlockSize:]
 	stream := cipher.NewCFBDecrypter(block, iv)
 	stream.XORKeyStream(plaintext, plaintext)
-	if !utf8.Valid(plaintext) {
-		return ciphertext, errors.New("invalid ciphertext or key")
-	}
-	return string(plaintext), nil
+	return
 }
 
 // EncryptGCM GCM 字符串加密
-func EncryptGCM(plaintext string, key string) (string, error) {
+func EncryptGCM(plaintext, key []byte) (ciphertext []byte, err error) {
 	if len(plaintext) == 0 {
-		return plaintext, nil
+		return nil, nil
 	}
-	err := ValidAesKey(key)
+	err = ValidAesKey(key)
 	if err != nil {
-		return plaintext, err
+		return
 	}
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
-		return "", err
+		return
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", err
+		return
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	_, err = rand.Read(nonce)
 	if err != nil {
-		return "", err
+		return
 	}
 
-	ciphertextData := gcm.Seal(nil, nonce, []byte(plaintext), nil)
+	ciphertextPayload := gcm.Seal(nil, nonce, plaintext, nil)
 
-	ciphertext := append(nonce, ciphertextData...)
+	ciphertext = append(nonce, ciphertextPayload...)
 
-	return hex.EncodeToString(ciphertext), nil
+	return
 }
 
 // DecryptGCM GCM 字符串解密
-func DecryptGCM(ciphertext string, key string) (string, error) {
-	gcmCiphertext, err := hex.DecodeString(ciphertext)
+func DecryptGCM(ciphertext, key []byte) (plaintext []byte, err error) {
+	block, err := aes.NewCipher(key)
 	if err != nil {
-		return "", err
+		return
 	}
-
-	block, err := aes.NewCipher([]byte(key))
-	if err != nil {
-		return "", err
-	}
-
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", err
+		return
 	}
 
 	nonceSize := gcm.NonceSize()
-	if len(gcmCiphertext) < nonceSize {
-		return "", errors.New("ciphertext too short")
+	if len(ciphertext) < nonceSize {
+		return nil, errors.New("ciphertext too short")
 	}
 
-	nonce, ciphertextData := gcmCiphertext[:nonceSize], gcmCiphertext[nonceSize:]
+	nonce, ciphertextPayload := ciphertext[:nonceSize], ciphertext[nonceSize:]
 
-	plaintext, err := gcm.Open(nil, nonce, ciphertextData, nil)
+	plaintext, err = gcm.Open(nil, nonce, ciphertextPayload, nil)
 	if err != nil {
-		return "", err
+		return
 	}
-	return string(plaintext), nil
+	return
 }
 
+type DecryptFunc func(ciphertext, key []byte) (plaintext []byte, err error)
+
 // DecryptToStruct 将结构体中的加密字段转换为明文
-func DecryptToStruct(x any, secretKey string, decryptFunc func(ciphertext string, key string) (string, error)) error {
+func DecryptToStruct(x any, key []byte, decryptFunc func(ciphertext, key []byte) (plaintext []byte, err error)) error {
 	xv := reflect.ValueOf(x)
 	if xv.Kind() != reflect.Ptr {
 		return errors.New("not a pointer")
@@ -147,24 +129,32 @@ func DecryptToStruct(x any, secretKey string, decryptFunc func(ciphertext string
 			fv := ve.Field(i)
 			switch fv.Kind() {
 			case reflect.String:
-				plaintext, err := decryptFunc(fv.String(), secretKey)
+				ciphertext, err := base64.StdEncoding.DecodeString(fv.String())
 				if err != nil {
 					return err
 				}
-				fv.SetString(plaintext)
+				plaintext, err := decryptFunc(ciphertext, key)
+				if err != nil {
+					return err
+				}
+				fv.SetString(string(plaintext))
 			case reflect.Ptr:
 				if fv.IsNil() {
 					continue
 				}
 				switch fv.Elem().Kind() {
 				case reflect.String:
-					plaintext, err := decryptFunc(fv.Elem().String(), secretKey)
+					ciphertext, err := base64.StdEncoding.DecodeString(fv.Elem().String())
 					if err != nil {
 						return err
 					}
-					fv.Set(reflect.ValueOf(&plaintext))
+					plaintext, err := decryptFunc(ciphertext, key)
+					if err != nil {
+						return err
+					}
+					fv.Set(reflect.ValueOf(new(string(plaintext))))
 				case reflect.Struct:
-					if err := DecryptToStruct(fv.Interface(), secretKey, decryptFunc); err != nil {
+					if err := DecryptToStruct(fv.Interface(), key, decryptFunc); err != nil {
 						return err
 					}
 				default:
@@ -174,14 +164,4 @@ func DecryptToStruct(x any, secretKey string, decryptFunc func(ciphertext string
 		}
 	}
 	return nil
-}
-
-// DecryptCFBToStruct 将结构体中的 CFB 加密字段转换为明文
-func DecryptCFBToStruct(x any, secretKey string) error {
-	return DecryptToStruct(x, secretKey, DecryptCFB)
-}
-
-// DecryptGCMToStruct 将结构体中的 GCM 加密字段转换为明文
-func DecryptGCMToStruct(x any, secretKey string) error {
-	return DecryptToStruct(x, secretKey, DecryptGCM)
 }
