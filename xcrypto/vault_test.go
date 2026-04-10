@@ -26,7 +26,7 @@ func TestVault(t *testing.T) {
 	}
 	t.Logf("plaintext: %s", plaintext)
 	newMasterKey := GenMasterKey([]byte(newPassword), GenSalt())
-	err = UpdateVaultKey(vault, masterKey, newMasterKey, true)
+	err = UpdateVaultKEK(vault, masterKey, newMasterKey, true)
 	if err != nil {
 		t.Fatal(err)
 	}
