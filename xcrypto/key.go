@@ -31,18 +31,21 @@ func GenDeriveKey(password, salt []byte) []byte {
 	return pbkdf2.Key(password, salt, Iterations, DefaultKeyLen, sha256.New)
 }
 
+// GenKey 生成随机密钥
+func GenKey(keyLen int) []byte {
+	key := make([]byte, keyLen)
+	_, _ = rand.Read(key)
+	return key
+}
+
 // GenSalt 生成随机盐
 func GenSalt() []byte {
-	salt := make([]byte, DefaultKeyLen)
-	_, _ = rand.Read(salt)
-	return salt
+	return GenKey(DefaultKeyLen)
 }
 
 // GenDEK 生成 DEK（Data Encryption Key，数据加密密钥）
 func GenDEK() []byte {
-	dek := make([]byte, DefaultKeyLen)
-	_, _ = rand.Read(dek)
-	return dek
+	return GenKey(DefaultKeyLen)
 }
 
 // GenMasterKey 生成主密钥
