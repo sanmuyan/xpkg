@@ -18,7 +18,7 @@ type Vault struct {
 }
 
 func genVaultKEK(masterKey, salt []byte) ([]byte, error) {
-	return GenExtendedKey(masterKey, salt, []byte("vault")) //
+	return GenExtendKey(masterKey, salt, []byte("vault")) //
 }
 
 // CreateVault 创建 Vault

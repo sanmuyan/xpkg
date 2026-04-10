@@ -15,19 +15,19 @@ const (
 	DefaultKeyLen = 32
 )
 
-// GenExtendedKey 使用 HKDF 生成扩展密钥
-func GenExtendedKey(key []byte, salt, info []byte) ([]byte, error) {
+// GenExtendKey 使用 HKDF 生成扩展密钥
+func GenExtendKey(key []byte, salt, info []byte) ([]byte, error) {
 	h := hkdf.New(sha256.New, key, salt, info)
-	extendedKey := make([]byte, DefaultKeyLen)
-	_, err := io.ReadFull(h, extendedKey)
+	extendKey := make([]byte, DefaultKeyLen)
+	_, err := io.ReadFull(h, extendKey)
 	if err != nil {
 		return nil, err
 	}
-	return extendedKey, nil
+	return extendKey, nil
 }
 
-// GenDerivedKey 使用 KDF 生成派生密钥
-func GenDerivedKey(password, salt []byte) []byte {
+// GenDeriveKey 使用 KDF 生成派生密钥
+func GenDeriveKey(password, salt []byte) []byte {
 	return pbkdf2.Key(password, salt, Iterations, DefaultKeyLen, sha256.New)
 }
 
@@ -47,7 +47,7 @@ func GenDEK() []byte {
 
 // GenMasterKey 生成主密钥
 func GenMasterKey(password, salt []byte) []byte {
-	return GenDerivedKey(password, salt)
+	return GenDeriveKey(password, salt)
 }
 
 // GenPasswordKDFHash 生成密码 KDF 哈希
