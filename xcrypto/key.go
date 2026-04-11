@@ -3,22 +3,17 @@ package xcrypto
 import (
 	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha256"
 	"io"
 
 	"golang.org/x/crypto/hkdf"
 	"golang.org/x/crypto/pbkdf2"
 )
 
-const (
-	Iterations    = 600000
-	DefaultKeyLen = 32
-)
-
 // GenExtendKey 使用 HKDF 生成扩展密钥
-func GenExtendKey(key []byte, salt, info []byte) ([]byte, error) {
-	h := hkdf.New(sha256.New, key, salt, info)
-	extendKey := make([]byte, DefaultKeyLen)
+func GenExtendKey(key []byte, salt, info []byte, opts ...KeyOption) ([]byte, error) {
+	c := applyKeyOption(opts...)
+	h := hkdf.New(c.hash, key, salt, info)
+	extendKey := make([]byte, c.keyLen)
 	_, err := io.ReadFull(h, extendKey)
 	if err != nil {
 		return nil, err
@@ -27,25 +22,27 @@ func GenExtendKey(key []byte, salt, info []byte) ([]byte, error) {
 }
 
 // GenDeriveKey 使用 KDF 生成派生密钥
-func GenDeriveKey(password, salt []byte) []byte {
-	return pbkdf2.Key(password, salt, Iterations, DefaultKeyLen, sha256.New)
+func GenDeriveKey(password, salt []byte, opts ...KeyOption) []byte {
+	c := applyKeyOption(opts...)
+	return pbkdf2.Key(password, salt, c.iterations, c.keyLen, c.hash)
 }
 
 // GenKey 生成随机密钥
-func GenKey(keyLen int) []byte {
-	key := make([]byte, keyLen)
+func GenKey(opts ...KeyOption) []byte {
+	c := applyKeyOption(opts...)
+	key := make([]byte, c.keyLen)
 	_, _ = rand.Read(key)
 	return key
 }
 
 // GenSalt 生成随机盐
-func GenSalt() []byte {
-	return GenKey(DefaultKeyLen)
+func GenSalt(opts ...KeyOption) []byte {
+	return GenKey(opts...)
 }
 
 // GenDEK 生成 DEK（Data Encryption Key，数据加密密钥）
-func GenDEK() []byte {
-	return GenKey(DefaultKeyLen)
+func GenDEK(opts ...KeyOption) []byte {
+	return GenKey(opts...)
 }
 
 // GenMasterKey 生成主密钥

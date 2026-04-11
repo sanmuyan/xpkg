@@ -8,6 +8,9 @@ import (
 var key = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 var text = "123456"
 
+var postEncoder = WithPostEncoder(base64.StdEncoding.AppendEncode)
+var preDecoder = WithPreDecoder(base64.StdEncoding.AppendDecode)
+
 type TestDataDecryptToStruct struct {
 	Ciphertext string
 	T2         *struct {
@@ -17,11 +20,11 @@ type TestDataDecryptToStruct struct {
 }
 
 func TestCFB(t *testing.T) {
-	ciphertext, err := EncryptCFB([]byte(text), []byte(key))
+	ciphertext, err := EncryptCFB([]byte(text), []byte(key), postEncoder)
 	if err != nil {
 		t.Fatal(err)
 	}
-	plaintext, err := DecryptCFB(ciphertext, []byte(key))
+	plaintext, err := DecryptCFB(ciphertext, []byte(key), preDecoder)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,11 +36,11 @@ func TestCFB(t *testing.T) {
 }
 
 func TestGCM(t *testing.T) {
-	ciphertext, err := EncryptGCM([]byte(text), []byte(key))
+	ciphertext, err := EncryptGCM([]byte(text), []byte(key), postEncoder)
 	if err != nil {
 		t.Fatal(err)
 	}
-	plaintext, err := DecryptGCM(ciphertext, []byte(key))
+	plaintext, err := DecryptGCM(ciphertext, []byte(key), preDecoder)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,18 +51,18 @@ func TestGCM(t *testing.T) {
 	testDecryptStruct(t, ciphertext, DecryptGCM)
 }
 
-func testDecryptStruct(t *testing.T, ciphertext []byte, decryptFunc DecryptFunc) {
-	ciphertextBase64 := base64.StdEncoding.EncodeToString(ciphertext)
+func testDecryptStruct(t *testing.T, ciphertextBase64 []byte, decryptFunc DecryptFunc) {
+	ciphertext := string(ciphertextBase64)
 	testData := &TestDataDecryptToStruct{
-		Ciphertext: ciphertextBase64,
+		Ciphertext: ciphertext,
 		T2: &struct {
 			Ciphertext string
 		}{
-			Ciphertext: ciphertextBase64,
+			Ciphertext: ciphertext,
 		},
-		T3: &ciphertextBase64,
+		T3: &ciphertext,
 	}
-	err := DecryptToStruct(testData, []byte(key), decryptFunc)
+	err := DecryptToStruct(testData, []byte(key), decryptFunc, preDecoder)
 	if err != nil {
 		t.Fatal(err)
 	}

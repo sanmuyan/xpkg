@@ -21,3 +21,7 @@ func TestComparePasswordKDFHash(t *testing.T) {
 		t.Fatalf("not expected")
 	}
 }
+
+func TestGenDeriveKey(t *testing.T) {
+	GenDeriveKey([]byte("test"), []byte("test"), WithIterations(1000000))
+}

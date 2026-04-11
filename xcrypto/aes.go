@@ -4,7 +4,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"io"
 	"reflect"
@@ -21,7 +20,7 @@ func ValidAesKey(key []byte) error {
 }
 
 // EncryptCFB CFB 加密
-func EncryptCFB(plaintext, key []byte) (ciphertext []byte, err error) {
+func EncryptCFB(plaintext, key []byte, opts ...EncryptOption) (ciphertext []byte, err error) {
 	err = ValidAesKey(key)
 	if err != nil {
 		return
@@ -37,11 +36,18 @@ func EncryptCFB(plaintext, key []byte) (ciphertext []byte, err error) {
 	}
 	stream := cipher.NewCFBEncrypter(block, iv)
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
+	c := applyEncryptOption(opts...)
+	ciphertext = encryptEncode(ciphertext, c)
 	return
 }
 
 // DecryptCFB CFB 解密
-func DecryptCFB(ciphertext, key []byte) (plaintext []byte, err error) {
+func DecryptCFB(ciphertext, key []byte, opts ...EncryptOption) (plaintext []byte, err error) {
+	c := applyEncryptOption(opts...)
+	ciphertext, err = decryptDecode(ciphertext, c)
+	if err != nil {
+		return
+	}
 	err = ValidAesKey(key)
 	if err != nil {
 		return
@@ -59,7 +65,7 @@ func DecryptCFB(ciphertext, key []byte) (plaintext []byte, err error) {
 }
 
 // EncryptGCM GCM 字符串加密
-func EncryptGCM(plaintext, key []byte) (ciphertext []byte, err error) {
+func EncryptGCM(plaintext, key []byte, opts ...EncryptOption) (ciphertext []byte, err error) {
 	if len(plaintext) == 0 {
 		return nil, nil
 	}
@@ -86,12 +92,22 @@ func EncryptGCM(plaintext, key []byte) (ciphertext []byte, err error) {
 	ciphertextPayload := gcm.Seal(nil, nonce, plaintext, nil)
 
 	ciphertext = append(nonce, ciphertextPayload...)
-
+	c := applyEncryptOption(opts...)
+	ciphertext = encryptEncode(ciphertext, c)
 	return
 }
 
 // DecryptGCM GCM 字符串解密
-func DecryptGCM(ciphertext, key []byte) (plaintext []byte, err error) {
+func DecryptGCM(ciphertext, key []byte, opts ...EncryptOption) (plaintext []byte, err error) {
+	c := applyEncryptOption(opts...)
+	ciphertext, err = decryptDecode(ciphertext, c)
+	if err != nil {
+		return
+	}
+	err = ValidAesKey(key)
+	if err != nil {
+		return
+	}
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return
@@ -115,10 +131,10 @@ func DecryptGCM(ciphertext, key []byte) (plaintext []byte, err error) {
 	return
 }
 
-type DecryptFunc func(ciphertext, key []byte) (plaintext []byte, err error)
+type DecryptFunc func(ciphertext, key []byte, opts ...EncryptOption) (plaintext []byte, err error)
 
 // DecryptToStruct 将结构体中的加密字段转换为明文
-func DecryptToStruct(x any, key []byte, decryptFunc func(ciphertext, key []byte) (plaintext []byte, err error)) error {
+func DecryptToStruct(x any, key []byte, decryptFunc DecryptFunc, inDecoder EncryptOption) error {
 	xv := reflect.ValueOf(x)
 	if xv.Kind() != reflect.Ptr {
 		return errors.New("not a pointer")
@@ -129,11 +145,7 @@ func DecryptToStruct(x any, key []byte, decryptFunc func(ciphertext, key []byte)
 			fv := ve.Field(i)
 			switch fv.Kind() {
 			case reflect.String:
-				ciphertext, err := base64.StdEncoding.DecodeString(fv.String())
-				if err != nil {
-					return err
-				}
-				plaintext, err := decryptFunc(ciphertext, key)
+				plaintext, err := decryptFunc([]byte(fv.String()), key, inDecoder)
 				if err != nil {
 					return err
 				}
@@ -144,17 +156,13 @@ func DecryptToStruct(x any, key []byte, decryptFunc func(ciphertext, key []byte)
 				}
 				switch fv.Elem().Kind() {
 				case reflect.String:
-					ciphertext, err := base64.StdEncoding.DecodeString(fv.Elem().String())
-					if err != nil {
-						return err
-					}
-					plaintext, err := decryptFunc(ciphertext, key)
+					plaintext, err := decryptFunc([]byte(fv.Elem().String()), key, inDecoder)
 					if err != nil {
 						return err
 					}
 					fv.Set(reflect.ValueOf(new(string(plaintext))))
 				case reflect.Struct:
-					if err := DecryptToStruct(fv.Interface(), key, decryptFunc); err != nil {
+					if err := DecryptToStruct(fv.Interface(), key, decryptFunc, inDecoder); err != nil {
 						return err
 					}
 				default:
