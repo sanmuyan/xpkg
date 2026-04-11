@@ -1,15 +1,14 @@
 package xcrypto
 
 import (
-	"encoding/base64"
 	"testing"
 )
 
 var key = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 var text = "123456"
 
-var postEncoder = WithPostEncoder(base64.StdEncoding.AppendEncode)
-var preDecoder = WithPreDecoder(base64.StdEncoding.AppendDecode)
+var encryptEncoder = WithEncryptEncoder(Base64Encode)
+var decryptDecoder = WithDecryptDecoder(Base64Decode)
 
 type TestDataDecryptToStruct struct {
 	Ciphertext string
@@ -20,11 +19,11 @@ type TestDataDecryptToStruct struct {
 }
 
 func TestCFB(t *testing.T) {
-	ciphertext, err := EncryptCFB([]byte(text), []byte(key), postEncoder)
+	ciphertext, err := EncryptCFB([]byte(text), []byte(key), encryptEncoder)
 	if err != nil {
 		t.Fatal(err)
 	}
-	plaintext, err := DecryptCFB(ciphertext, []byte(key), preDecoder)
+	plaintext, err := DecryptCFB(ciphertext, []byte(key), decryptDecoder)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,11 +35,11 @@ func TestCFB(t *testing.T) {
 }
 
 func TestGCM(t *testing.T) {
-	ciphertext, err := EncryptGCM([]byte(text), []byte(key), postEncoder)
+	ciphertext, err := EncryptGCM([]byte(text), []byte(key), encryptEncoder)
 	if err != nil {
 		t.Fatal(err)
 	}
-	plaintext, err := DecryptGCM(ciphertext, []byte(key), preDecoder)
+	plaintext, err := DecryptGCM(ciphertext, []byte(key), decryptDecoder)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +61,7 @@ func testDecryptStruct(t *testing.T, ciphertextBase64 []byte, decryptFunc Decryp
 		},
 		T3: &ciphertext,
 	}
-	err := DecryptToStruct(testData, []byte(key), decryptFunc, preDecoder)
+	err := DecryptToStruct(testData, []byte(key), decryptFunc, decryptDecoder)
 	if err != nil {
 		t.Fatal(err)
 	}

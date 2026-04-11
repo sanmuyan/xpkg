@@ -23,5 +23,5 @@ func TestComparePasswordKDFHash(t *testing.T) {
 }
 
 func TestGenDeriveKey(t *testing.T) {
-	GenDeriveKey([]byte("test"), []byte("test"), WithIterations(1000000))
+	GenDeriveKey([]byte("test"), []byte("test"), WithKeyIterations(1000000))
 }

@@ -16,13 +16,15 @@ type keyConfig struct {
 	iterations int
 	keyLen     int
 	hash       func() hash.Hash
+	*cryptoConfig
 }
 
 func newKeyConfig() *keyConfig {
 	return &keyConfig{
-		iterations: Iterations,
-		keyLen:     DefaultKeyLen,
-		hash:       sha256.New,
+		iterations:   Iterations,
+		keyLen:       DefaultKeyLen,
+		hash:         sha256.New,
+		cryptoConfig: newCryptoConfig(),
 	}
 }
 
@@ -36,23 +38,26 @@ func applyKeyOption(opts ...KeyOption) *keyConfig {
 	return c
 }
 
-// WithIterations 设置迭代次数
-func WithIterations(iterations int) KeyOption {
+func WithKeyIterations(iterations int) KeyOption {
 	return func(c *keyConfig) {
 		c.iterations = iterations
 	}
 }
 
-// WithKeyLen 设置密钥长度
 func WithKeyLen(keyLen int) KeyOption {
 	return func(c *keyConfig) {
 		c.keyLen = keyLen
 	}
 }
 
-// WithHash 设置哈希函数
-func WithHash(hash func() hash.Hash) KeyOption {
+func WithKeyHash(hash func() hash.Hash) KeyOption {
 	return func(c *keyConfig) {
 		c.hash = hash
+	}
+}
+
+func WithKeyEncoder(encoder Encoder) KeyOption {
+	return func(c *keyConfig) {
+		c.encoder = encoder
 	}
 }

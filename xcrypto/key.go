@@ -18,7 +18,7 @@ func GenExtendKey(key []byte, salt, info []byte, opts ...KeyOption) ([]byte, err
 	if err != nil {
 		return nil, err
 	}
-	return extendKey, nil
+	return c.encode(extendKey), nil
 }
 
 // GenDeriveKey 使用 KDF 生成派生密钥
