@@ -24,7 +24,8 @@ func GenExtendKey(key []byte, salt, info []byte, opts ...KeyOption) ([]byte, err
 // GenDeriveKey 使用 KDF 生成派生密钥
 func GenDeriveKey(password, salt []byte, opts ...KeyOption) []byte {
 	c := applyKeyOption(opts...)
-	return pbkdf2.Key(password, salt, c.iterations, c.keyLen, c.hash)
+	deriveKey := pbkdf2.Key(password, salt, c.iterations, c.keyLen, c.hash)
+	return c.encode(deriveKey)
 }
 
 // GenKey 生成随机密钥
@@ -32,7 +33,7 @@ func GenKey(opts ...KeyOption) []byte {
 	c := applyKeyOption(opts...)
 	key := make([]byte, c.keyLen)
 	_, _ = rand.Read(key)
-	return key
+	return c.encode(key)
 }
 
 // GenSalt 生成随机盐
@@ -46,8 +47,8 @@ func GenDEK(opts ...KeyOption) []byte {
 }
 
 // GenMasterKey 生成主密钥
-func GenMasterKey(password, salt []byte) []byte {
-	return GenDeriveKey(password, salt)
+func GenMasterKey(password, salt []byte, opts ...KeyOption) []byte {
+	return GenDeriveKey(password, salt, opts...)
 }
 
 // GenPasswordKDFHash 生成密码 KDF 哈希
