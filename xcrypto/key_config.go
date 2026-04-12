@@ -56,6 +56,7 @@ func WithKeyHash(hash func() hash.Hash) KeyOption {
 	}
 }
 
+// WithKeyEncoder 用于秘钥生成后编码
 func WithKeyEncoder(encoder Encoder) KeyOption {
 	return func(c *keyConfig) {
 		c.encoder = encoder

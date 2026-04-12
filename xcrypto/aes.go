@@ -62,7 +62,7 @@ func DecryptCFB(ciphertext, key []byte, opts ...CryptoOption) (plaintext []byte,
 	return
 }
 
-// EncryptGCM GCM 字符串加密
+// EncryptGCM GCM 加密
 func EncryptGCM(plaintext, key []byte, opts ...CryptoOption) (ciphertext []byte, err error) {
 	if len(plaintext) == 0 {
 		return nil, nil
@@ -94,7 +94,7 @@ func EncryptGCM(plaintext, key []byte, opts ...CryptoOption) (ciphertext []byte,
 	return
 }
 
-// DecryptGCM GCM 字符串解密
+// DecryptGCM GCM 解密
 func DecryptGCM(ciphertext, key []byte, opts ...CryptoOption) (plaintext []byte, err error) {
 	ciphertext, err = applyCryptoOption(opts...).decode(ciphertext)
 	if err != nil {

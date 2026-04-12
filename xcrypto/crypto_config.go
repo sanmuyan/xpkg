@@ -14,12 +14,14 @@ func newCryptoConfig() *cryptoConfig {
 
 type CryptoOption func(*cryptoConfig)
 
+// WithEncryptEncoder 用于加密后数据编码
 func WithEncryptEncoder(encoder Encoder) CryptoOption {
 	return func(c *cryptoConfig) {
 		c.encoder = encoder
 	}
 }
 
+// WithDecryptDecoder 用于解密前数据解码
 func WithDecryptDecoder(decoder Decoder) CryptoOption {
 	return func(c *cryptoConfig) {
 		c.decoder = decoder

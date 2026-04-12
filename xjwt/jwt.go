@@ -6,8 +6,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// ValidJwtKey 校验 JWT 密钥长度是否符合要求
-func ValidJWTKey(key []byte) error {
+// ValidJWKKey 校验 JWT 密钥长度是否符合要求
+func ValidJWKKey(key []byte) error {
 	switch len(key) {
 	case 32:
 		return nil
@@ -18,7 +18,7 @@ func ValidJWTKey(key []byte) error {
 
 // CreateToken 创建 JWT
 func CreateToken(claims jwt.Claims, key []byte) (tokenStr string, err error) {
-	err = ValidJWTKey(key)
+	err = ValidJWKKey(key)
 	if err != nil {
 		return
 	}
@@ -32,7 +32,7 @@ func CreateToken(claims jwt.Claims, key []byte) (tokenStr string, err error) {
 
 // ParseToken 解析 JWT
 func ParseToken(tokenStr string, key []byte, claims jwt.Claims) (token *jwt.Token, err error) {
-	err = ValidJWTKey(key)
+	err = ValidJWKKey(key)
 	if err != nil {
 		return
 	}
