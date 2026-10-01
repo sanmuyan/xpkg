@@ -2,7 +2,6 @@ package xrequest
 
 import (
 	"bytes"
-	"crypto/tls"
 	"io"
 	"net/http"
 	"time"
@@ -14,13 +13,14 @@ type Response struct {
 }
 
 type Options struct {
-	URL                string
-	Method             string
-	Body               []byte
-	bodyReader         io.Reader
-	Head               map[string]string
-	Timeout            int
-	InsecureSkipVerify bool
+	URL            string
+	Method         string
+	Body           []byte
+	bodyReader     io.Reader
+	Head           map[string]string
+	Timeout        int
+	Client         *http.Client
+	NoResponseBody bool
 }
 
 type Request struct {
@@ -37,6 +37,17 @@ func NewRequest(opt *Options) *Request {
 	if opt.Body != nil {
 		opt.bodyReader = bytes.NewReader(opt.Body)
 	}
+	if opt.Client == nil {
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.MaxIdleConns = 10000
+		transport.MaxIdleConnsPerHost = 10000
+		transport.MaxConnsPerHost = 10000
+		transport.IdleConnTimeout = 60 * time.Second
+		opt.Client = &http.Client{
+			Timeout:   time.Duration(opt.Timeout) * time.Second,
+			Transport: transport,
+		}
+	}
 	return &Request{config: opt}
 }
 
@@ -49,15 +60,12 @@ func (c *Request) Request() (*Response, error) {
 	for k, v := range c.config.Head {
 		req.Header.Set(k, v)
 	}
-	client := http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: c.config.InsecureSkipVerify},
-		},
-		Timeout: time.Second * time.Duration(c.config.Timeout),
-	}
-	resp, err := client.Do(req)
+	resp, err := c.config.Client.Do(req)
 	if err != nil {
 		return nil, err
+	}
+	if c.config.NoResponseBody {
+		return &Response{Response: resp}, nil
 	}
 	defer func() {
 		_ = resp.Body.Close()
@@ -67,4 +75,8 @@ func (c *Request) Request() (*Response, error) {
 		return nil, err
 	}
 	return &Response{Body: res, Response: resp}, nil
+}
+
+func (c *Request) GetClient() *http.Client {
+	return c.config.Client
 }
