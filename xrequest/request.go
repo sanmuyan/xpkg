@@ -2,6 +2,7 @@ package xrequest
 
 import (
 	"bytes"
+	"crypto/tls"
 	"io"
 	"net/http"
 	"time"
@@ -13,14 +14,16 @@ type Response struct {
 }
 
 type Options struct {
-	URL            string
-	Method         string
-	Body           []byte
-	bodyReader     io.Reader
-	Head           map[string]string
-	Timeout        int
-	Client         *http.Client
-	NoResponseBody bool
+	URL                string
+	Method             string
+	Body               []byte
+	bodyReader         io.Reader
+	Head               map[string]string
+	Timeout            int
+	InsecureSkipVerify bool
+	Client             *http.Client
+	Request            *http.Request
+	NoResponseBody     bool
 }
 
 type Request struct {
@@ -43,6 +46,7 @@ func NewRequest(opt *Options) *Request {
 		transport.MaxIdleConnsPerHost = 10000
 		transport.MaxConnsPerHost = 10000
 		transport.IdleConnTimeout = 60 * time.Second
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: opt.InsecureSkipVerify}
 		opt.Client = &http.Client{
 			Timeout:   time.Duration(opt.Timeout) * time.Second,
 			Transport: transport,
@@ -53,9 +57,13 @@ func NewRequest(opt *Options) *Request {
 
 // Request 支持普通 HTTP 请求
 func (c *Request) Request() (*Response, error) {
-	req, err := http.NewRequest(c.config.Method, c.config.URL, c.config.bodyReader)
-	if err != nil {
-		return nil, err
+	req := c.config.Request
+	if req == nil {
+		var err error
+		req, err = http.NewRequest(c.config.Method, c.config.URL, c.config.bodyReader)
+		if err != nil {
+			return nil, err
+		}
 	}
 	for k, v := range c.config.Head {
 		req.Header.Set(k, v)
@@ -77,6 +85,6 @@ func (c *Request) Request() (*Response, error) {
 	return &Response{Body: res, Response: resp}, nil
 }
 
-func (c *Request) GetClient() *http.Client {
+func (c *Request) Client() *http.Client {
 	return c.config.Client
 }
