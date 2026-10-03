@@ -44,8 +44,6 @@ func NewRequest(opt *Options) *Request {
 		transport := http.DefaultTransport.(*http.Transport).Clone()
 		transport.MaxIdleConns = 10000
 		transport.MaxIdleConnsPerHost = 10000
-		transport.MaxConnsPerHost = 10000
-		transport.IdleConnTimeout = 60 * time.Second
 		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: opt.InsecureSkipVerify}
 		opt.Client = &http.Client{
 			Timeout:   time.Duration(opt.Timeout) * time.Second,
@@ -72,12 +70,12 @@ func (c *Request) Request() (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	if c.config.NoResponseBody {
-		return &Response{Response: resp}, nil
-	}
 	defer func() {
 		_ = resp.Body.Close()
 	}()
+	if c.config.NoResponseBody {
+		return &Response{Response: resp}, nil
+	}
 	res, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
